@@ -1,0 +1,255 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: DBIT API
+  description: DBIT API
+paths:
+  /database/create:
+    post:
+      description: Create an empty database
+      requestBody:
+        required: True
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - database_name
+              properties:
+                database_name:
+                  type: string
+                  minLength: 1
+      responses:
+        "201":
+          description: Database has been created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  database_name:
+                    type: string
+        "400":
+          description: An error occurred during database creation.
+  /database/table/create/:
+    post:
+      description: Create a new table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableSchema'
+      responses:
+        "201":
+          description: Table created!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableSchema'
+        "400":
+          description: Such a table can't be created.
+  /database/tables:
+    get:
+      description: Get all tables.
+      responses:
+        "200":
+          description: Success!
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "400":
+          description: Bad request.
+  /database/save_database:
+    post:
+      description: Save database to a file
+      responses:
+        "201":
+          description: Database has been saved
+        "400":
+          description: An error occurred during database saving.
+  /database/load_database:
+    post:
+      description: Load saved database. It will override the current one.
+      responses:
+        "201":
+          description: Database has been loaded
+        "400":
+          description: An error occurred during loading the database
+  /database/table/{tableId}:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+    get:
+      description: Get the specified table
+      responses:
+        "200":
+          description: Success!
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Bad request.
+    delete:
+      description: Drop table from database
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+  /database/table/{tableId}/edit_value:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+    patch:
+      description: Update value for specified column name and row ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditValueLocation'
+      responses:
+        "201":
+          description: Update successful.
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Bad request
+  /database/table/{tableId}/add_column:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+    post:
+      description: Add column to the specified table.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ColumnSchema'
+      responses:
+        "201":
+          description: Column created!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColumnSchema'
+        "400":
+          description: Bad request.
+  /database/table/{tableId}/add_row:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+    post:
+      description: Add row to the specified table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditValueLocation'
+      responses:
+        "201":
+          description: Added.
+        "417":
+          description: Some columns are not present in the table
+  /database/table/{tableId}/{columnId}:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+      - $ref: '#/components/parameters/columnId'
+    delete:
+      description: Delete column from the specified table.
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+  /database/table/{tableId}/{rowId}:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+      - $ref: '#/components/parameters/rowId'
+    delete:
+      description: Delete column from the specified table.
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+  /database/table/{tableId}/delete_duplicates:
+    parameters:
+      - $ref: '#/components/parameters/tableId'
+    delete:
+      description: Delete duplicates of the rows in the Table
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+components:
+  schemas:
+    ColumnType:
+      type: string
+      enum:
+        - char
+        - str
+        - int
+        - float
+        - complex
+    ColumnSchema:
+      type: object
+      properties:
+        columnName:
+          type: string
+          minLength: 1
+      additionalProperties:
+        $ref: '#/components/schemas/ColumnType'
+    RowSchema:
+      type: object
+      properties:
+        properties:
+          $ref: '#/components/schemas/ColumnSchema'
+    TableSchema:
+      type: object
+      required:
+        - tableName
+      properties:
+        tableName:
+          type: string
+          minLength: 1
+    EditValueLocation:
+      type: object
+      required:
+        - rowId
+        - columnName
+      properties:
+        rowId:
+          type: integer
+          minimum: 1
+        columnName:
+          type: string
+          minLength: 1
+  parameters:
+    tableId:
+      name: tableId
+      in: path
+      description: Table Name
+      required: true
+      schema:
+        type: string
+    columnId:
+      name: columnId
+      in: path
+      description: Column Name
+      required: true
+      schema:
+        type: string
+    rowId:
+      name: rowId
+      in: path
+      description: Row Name
+      required: true
+      schema:
+        type: string

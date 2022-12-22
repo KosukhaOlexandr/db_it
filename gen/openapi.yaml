@@ -1,0 +1,354 @@
+openapi: 3.0.0
+info:
+  description: DBIT API
+  title: DBIT API
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /database/create:
+    post:
+      description: Create an empty database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_database_create_post_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_database_create_post_201_response'
+          description: Database has been created
+        "400":
+          description: An error occurred during database creation.
+  /database/table/create/:
+    post:
+      description: Create a new table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableSchema'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableSchema'
+          description: Table created!
+        "400":
+          description: Such a table can't be created.
+  /database/tables:
+    get:
+      description: Get all tables.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: object
+                type: array
+          description: Success!
+        "400":
+          description: Bad request.
+  /database/save_database:
+    post:
+      description: Save database to a file
+      responses:
+        "201":
+          description: Database has been saved
+        "400":
+          description: An error occurred during database saving.
+  /database/load_database:
+    post:
+      description: Load saved database. It will override the current one.
+      responses:
+        "201":
+          description: Database has been loaded
+        "400":
+          description: An error occurred during loading the database
+  /database/table/{tableId}:
+    delete:
+      description: Drop table from database
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+    get:
+      description: Get the specified table
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Success!
+        "400":
+          description: Bad request.
+  /database/table/{tableId}/edit_value:
+    patch:
+      description: Update value for specified column name and row ID.
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditValueLocation'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Update successful.
+        "400":
+          description: Bad request
+  /database/table/{tableId}/add_column:
+    post:
+      description: Add column to the specified table.
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ColumnSchema'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColumnSchema'
+          description: Column created!
+        "400":
+          description: Bad request.
+  /database/table/{tableId}/add_row:
+    post:
+      description: Add row to the specified table
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditValueLocation'
+        required: true
+      responses:
+        "201":
+          description: Added.
+        "417":
+          description: Some columns are not present in the table
+  /database/table/{tableId}/{columnId}:
+    delete:
+      description: Delete column from the specified table.
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Column Name
+        explode: false
+        in: path
+        name: columnId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+  /database/table/{tableId}/{rowId}:
+    delete:
+      description: Delete column from the specified table.
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Row Name
+        explode: false
+        in: path
+        name: rowId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+  /database/table/{tableId}/delete_duplicates:
+    delete:
+      description: Delete duplicates of the rows in the Table
+      parameters:
+      - description: Table Name
+        explode: false
+        in: path
+        name: tableId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deletion successful
+        "400":
+          description: An error occurred during deletion.
+components:
+  parameters:
+    tableId:
+      description: Table Name
+      explode: false
+      in: path
+      name: tableId
+      required: true
+      schema:
+        type: string
+      style: simple
+    columnId:
+      description: Column Name
+      explode: false
+      in: path
+      name: columnId
+      required: true
+      schema:
+        type: string
+      style: simple
+    rowId:
+      description: Row Name
+      explode: false
+      in: path
+      name: rowId
+      required: true
+      schema:
+        type: string
+      style: simple
+  schemas:
+    ColumnType:
+      enum:
+      - char
+      - str
+      - int
+      - float
+      - complex
+      title: ColumnType
+      type: string
+    ColumnSchema:
+      additionalProperties:
+        $ref: '#/components/schemas/ColumnType'
+      example:
+        columnName: columnName
+      properties:
+        columnName:
+          minLength: 1
+          type: string
+      title: ColumnSchema
+      type: object
+    TableSchema:
+      example:
+        tableName: tableName
+      properties:
+        tableName:
+          minLength: 1
+          title: tableName
+          type: string
+      required:
+      - tableName
+      title: TableSchema
+      type: object
+    EditValueLocation:
+      example:
+        rowId: 1
+        columnName: columnName
+      properties:
+        rowId:
+          minimum: 1
+          title: rowId
+          type: integer
+        columnName:
+          minLength: 1
+          title: columnName
+          type: string
+      required:
+      - columnName
+      - rowId
+      title: EditValueLocation
+      type: object
+    _database_create_post_request:
+      properties:
+        database_name:
+          minLength: 1
+          title: database_name
+          type: string
+      required:
+      - database_name
+      title: _database_create_post_request
+      type: object
+    _database_create_post_201_response:
+      example:
+        database_name: database_name
+      properties:
+        database_name:
+          title: database_name
+          type: string
+      title: _database_create_post_201_response
+      type: object
